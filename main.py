@@ -6,13 +6,10 @@ from urllib.parse import urlparse, unquote_plus
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pymongo import MongoClient
 
-from jinja2 import Environment, FileSystemLoader
-
 BASE_DIR = Path(__file__).parent
-jinja = Environment(loader=FileSystemLoader(BASE_DIR.joinpath("templates")))
 
 # MongoDB connection
-client = MongoClient('mongodb://localhost:27017/')
+client = MongoClient('mongodb://db:27017/')
 db = client['messages_db']
 collection = db['messages']
 
@@ -20,17 +17,16 @@ collection = db['messages']
 class Framework(BaseHTTPRequestHandler):
     def do_GET(self):
         router = urlparse(self.path).path
-        match router:
-            case "/":
-                self.send_html("index.html")
-            case "/message":
-                self.send_html("message.html")
-            case _:
-                file = BASE_DIR.joinpath(router[1:])
-                if file.exists():
-                    self.send_static(file)
-                else:
-                    self.send_html("error.html", 404)
+        if router == "/":
+            self.send_html("index.html")
+        elif router == "/message":
+            self.send_html("message.html")
+        else:
+            file = BASE_DIR.joinpath(router[1:])
+            if file.exists():
+                self.send_static(file)
+            else:
+                self.send_html("error.html", 404)
 
     def do_POST(self):
         size = int(self.headers["Content-Length"])
@@ -59,7 +55,7 @@ class Framework(BaseHTTPRequestHandler):
     def send_data_to_socket_server(self, data):
         # Create a UDP socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        server_address = ('localhost', 5000)
+        server_address = ('localhost', 5050)
         sock.sendto(data.encode(), server_address)
 
 
@@ -72,9 +68,9 @@ def run_http_server(server_class=HTTPServer, handler_class=Framework):
 
 def run_socket_server():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    server_address = ('localhost', 5000)
+    server_address = ('localhost', 5050)
     sock.bind(server_address)
-    print("Socket Server running on port 5000")
+    print("Socket Server running on port 5050")
 
     while True:
         data, address = sock.recvfrom(4096)

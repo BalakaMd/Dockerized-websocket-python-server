@@ -1,9 +1,11 @@
-FROM python:3.9-slim
+FROM python:3.8
 
 WORKDIR /app
 
-COPY . .
+COPY . /app
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install pymongo
+
+EXPOSE 3000 5050
 
 CMD ["python", "main.py"]
